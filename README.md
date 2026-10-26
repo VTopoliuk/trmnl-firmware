@@ -1,5 +1,14 @@
 # TRMNL Firmware
 
+This fork adds an opt-in, USB-powered local image display for TRMNL X, based on
+upstream **v1.8.17**. Configure the server and optional token in the Wi-Fi setup
+portal; no application address, credentials, content, or layout is compiled in.
+See [local display setup, protocol, build and tests](docs/local-display.md).
+
+The stock build environments retain the normal TRMNL behavior. Use
+`TRMNL_X_local` to include the local display feature. Partial refresh is
+experimental and includes a narrowly scoped FastEPD row-buffer fix.
+
 created for the [TRMNL](https://trmnl.com) e-ink display.
 
 > [!IMPORTANT]

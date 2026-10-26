@@ -11,15 +11,17 @@
 
 class HTTPClient;
 
-// Inputs for one HTTP GET. Everything else (attempts, timeouts, redirect
+// Inputs for one HTTP GET. Everything else (redirect
 // handling, accepted status codes, body limits, transport selection) is fixed
 // policy inside HttpRetryRequest so the API fetch and the image fetch behave
 // the same way.
 struct HttpRetryRequestConfig {
   String url;                      // what to GET
-  String apiBaseUrl;               // `headers` are sent only to hops whose URL starts with this
+  String apiBaseUrl;               // `headers` are sent only to hops on this origin
   HttpHeaderList headers;          // API auth/metadata headers (ID, Access-Token, ...)
   uint32_t readTimeoutSeconds = 0; // 0 = HTTP_DEFAULT_TIMEOUT_MS
+  uint32_t modemTimeoutMs = 0; // 0 preserves the stock modem timeout
+  uint8_t maxAttempts = HTTP_FAST_RETRY_ATTEMPTS; // local live mode uses one attempt
 };
 
 // One HTTP GET with retries, over Wi-Fi (HTTPClient) or, on TRMNL X joined to

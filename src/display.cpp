@@ -2729,3 +2729,34 @@ void display_sleep(void)
     bbep.deInit();
 #endif
 }
+
+#if defined(TRMNL_LOCAL_LIVE) && defined(BOARD_TRMNL_X)
+#include <services/local_live_policy.h>
+bool display_show_local_image(uint8_t *image, int size, bool forceFull, bool *actualFull, uint8_t partialPasses) {
+    if (!local_live::validPartialPasses(partialPasses) || !local_live::validPng(image, size, display_width(), display_height())) return false;
+    PNG *png = new PNG();
+    if (!png) return false;
+    int decode = png->openRAM(image, size, png_draw);
+    if (decode == PNG_SUCCESS) {
+        bbep.setMode(BB_MODE_1BPP);
+        decode = png->decode(nullptr, 0);
+    }
+    png->close();
+    delete png;
+    if (decode != PNG_SUCCESS) { bbep.setPreviousMode(BB_MODE_NONE); return false; }
+    bool full = forceFull || bbep.getPreviousMode() != BB_MODE_1BPP;
+    int rc;
+    if (full) rc = bbep.fullUpdate(CLEAR_SLOW, false);
+    else {
+        auto rows = local_live::changedRows(bbep.currentBuffer(), bbep.previousBuffer(),
+                                           (bbep.width() + 7) / 8, bbep.height());
+        // FastEPD diffs individual pixels, with neutral drive outside these rows.
+        bbep.setPasses(partialPasses, local_live::FULL_DRIVE_PASSES);
+        rc = rows.last < 0 ? BBEP_SUCCESS : bbep.partialUpdate(false, rows.first, rows.last);
+        if (rc != BBEP_SUCCESS) { full = true; rc = bbep.fullUpdate(CLEAR_SLOW, false); }
+    }
+    *actualFull = full;
+    Log_info("Local display refresh: %s, result %d", full ? "full" : "partial", rc);
+    return rc == BBEP_SUCCESS;
+}
+#endif

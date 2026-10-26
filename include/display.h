@@ -205,4 +205,8 @@ void display_sleep(void);
  */
 void display_wipe(void);
 
+#if defined(TRMNL_LOCAL_LIVE) && defined(BOARD_TRMNL_X)
+bool display_show_local_image(uint8_t *image, int size, bool forceFull, bool *actualFull, uint8_t partialPasses);
+#endif
+
 #endif

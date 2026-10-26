@@ -69,6 +69,7 @@ private:
 
   std::function<void()> _resetcallback;
   std::function<void()> _tickCallback = nullptr;
+  std::function<void(AsyncWebServer &)> _setupRoutesCallback;
   String _hostname = "";
 
   WifiCredentials _savedWifis[WIFI_MAX_SAVED_CREDS];
@@ -98,6 +99,11 @@ private:
   WifiConnectionState classifyConnectionFailure(const WifiConnectionResult &result);
 
 public:
+  /// Registers optional application routes before the setup server starts.
+  void setSetupRoutesCallback(std::function<void(AsyncWebServer &)> callback) {
+    _setupRoutesCallback = callback;
+  }
+
   wl_status_t connect(const WifiCredentials credentials);
 
   /// @brief Starts WiFi configuration portal.

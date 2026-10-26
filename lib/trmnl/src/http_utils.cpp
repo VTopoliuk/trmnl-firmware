@@ -3,9 +3,9 @@
 String httpOriginOf(const String &url) {
   int schemeEnd = url.indexOf("://");
   if (schemeEnd == -1) return url;
-  int pathStart = url.indexOf('/', schemeEnd + 3);
-  if (pathStart == -1) return url;
-  return url.substring(0, pathStart);
+  for (unsigned int i = schemeEnd + 3; i < url.length(); ++i)
+    if (url[i] == '/' || url[i] == '?' || url[i] == '#') return url.substring(0, i);
+  return url;
 }
 
 String resolveRedirectLocation(const String &location, const String &origin) {
@@ -15,7 +15,8 @@ String resolveRedirectLocation(const String &location, const String &origin) {
 
 bool isSameOrigin(const String &url, const String &base) {
   if (base.length() == 0) return false;
-  return url.startsWith(base);
+  if (!(url.startsWith("http://") || url.startsWith("https://"))) return false;
+  return httpOriginOf(url).equalsIgnoreCase(httpOriginOf(base));
 }
 
 const char *sniffImageContentType(const uint8_t *data, size_t len) {

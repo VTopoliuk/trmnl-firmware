@@ -80,4 +80,10 @@ String formatHeaders(const HttpHeaderList &headers) {
   return out;
 }
 
-void logHeaders(const HttpHeaderList &headers) { Log_info("Added headers:\n%s", formatHeaders(headers).c_str()); }
+void logHeaders(const HttpHeaderList &headers) {
+  HttpHeaderList redacted = headers;
+  for (auto &header : redacted) {
+    if (header.first.equalsIgnoreCase("Authorization")) header.second = "[redacted]";
+  }
+  Log_info("Added headers:\n%s", formatHeaders(redacted).c_str());
+}

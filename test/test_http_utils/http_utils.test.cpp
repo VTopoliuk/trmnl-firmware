@@ -51,6 +51,15 @@ void test_same_origin_false_for_empty_base(void) {
   TEST_ASSERT_FALSE(isSameOrigin("https://trmnl.app/images/a.bmp", ""));
 }
 
+void test_same_origin_rejects_lookalike_and_credentials(void) {
+  TEST_ASSERT_FALSE(isSameOrigin("https://trmnl.app.evil.example/a", "https://trmnl.app"));
+  TEST_ASSERT_FALSE(isSameOrigin("https://trmnl.app@evil.example/a", "https://trmnl.app"));
+  TEST_ASSERT_FALSE(isSameOrigin("http://trmnl.app/a", "https://trmnl.app"));
+  TEST_ASSERT_FALSE(isSameOrigin("https://trmnl.app:8443/a", "https://trmnl.app"));
+  TEST_ASSERT_TRUE(isSameOrigin("https://TRMNL.app/a", "https://trmnl.app/api"));
+  TEST_ASSERT_EQUAL_STRING("https://trmnl.app", httpOriginOf("https://trmnl.app?x=1").c_str());
+}
+
 // --- sniffImageContentType -------------------------------------------------
 
 void test_sniff_bmp(void) {
@@ -129,6 +138,7 @@ void process() {
   RUN_TEST(test_same_origin_true_for_prefix);
   RUN_TEST(test_same_origin_false_for_other_host);
   RUN_TEST(test_same_origin_false_for_empty_base);
+  RUN_TEST(test_same_origin_rejects_lookalike_and_credentials);
   RUN_TEST(test_sniff_bmp);
   RUN_TEST(test_sniff_png);
   RUN_TEST(test_sniff_jpeg);

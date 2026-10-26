@@ -28,7 +28,7 @@ HttpRetryRequest::~HttpRetryRequest() { releaseBody(); }
 
 https_request_err_e HttpRetryRequest::execute() {
   https_request_err_e err = HTTPS_NO_ERR;
-  for (uint8_t attempt = 1; attempt <= HTTP_FAST_RETRY_ATTEMPTS; ++attempt) {
+  for (uint8_t attempt = 1; attempt <= _config.maxAttempts; ++attempt) {
     err = attemptOnce();
 
     if (err == HTTPS_NO_ERR) {
@@ -42,13 +42,13 @@ https_request_err_e HttpRetryRequest::execute() {
       return err;
     }
 
-    Log_error_serial("Connection attempt %d/%d failed: %s", attempt, HTTP_FAST_RETRY_ATTEMPTS, _errorDetail.c_str());
+    Log_error_serial("Connection attempt %d/%d failed: %s", attempt, _config.maxAttempts, _errorDetail.c_str());
 
-    if (attempt < HTTP_FAST_RETRY_ATTEMPTS) {
+    if (attempt < _config.maxAttempts) {
       delay(HTTP_FAST_RETRY_DELAY_MS);
     }
   }
-  Log_error("HTTP GET failed after %d attempts: %s - %s, RSSI %" PRId32, HTTP_FAST_RETRY_ATTEMPTS,
+  Log_error("HTTP GET failed after %d attempts: %s - %s, RSSI %" PRId32, _config.maxAttempts,
             https_request_err_str(err), _errorDetail.c_str(), signalRssi());
   return err;
 }
@@ -281,7 +281,8 @@ https_request_err_e HttpRetryRequest::attemptModem() {
   uint32_t capacity = 0;
   bool tooBig = false;
   bool outOfMemory = false;
-  unsigned long timeoutMs = _readTimeoutMs > HTTP_MODEM_TIMEOUT_MS ? _readTimeoutMs : HTTP_MODEM_TIMEOUT_MS;
+  unsigned long timeoutMs = _config.modemTimeoutMs ? _config.modemTimeoutMs :
+    (_readTimeoutMs > HTTP_MODEM_TIMEOUT_MS ? _readTimeoutMs : HTTP_MODEM_TIMEOUT_MS);
 
   auto res = g_modem->httpGet(
     _config.url,

@@ -29,3 +29,12 @@ managed_components/
 # Integration test environment (contains secrets)
 test/integration/test_config.h
 dependencies.lock
+
+# Local connection credentials and device backups must never be published.
+.env
+.env.*
+!.env.example
+include/local_live_config.h
+local_live_config.h
+/artifacts/
+/backups/

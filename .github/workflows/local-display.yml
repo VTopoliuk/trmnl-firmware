@@ -1,0 +1,15 @@
+name: Local display checks
+on:
+  push:
+    branches: ["codex/local-display"]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: python3 tools/test_local_display.py

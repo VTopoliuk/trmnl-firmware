@@ -16,8 +16,8 @@ String httpOriginOf(const String &url);
 // `origin`.
 String resolveRedirectLocation(const String &location, const String &origin);
 
-// True when `url` starts with `base`. Used to decide whether auth headers may
-// be sent to a given hop. An empty base never matches.
+// True when scheme and authority match (case-insensitive). Used to scope
+// auth headers to their server, including redirects. An empty base never matches.
 bool isSameOrigin(const String &url, const String &base);
 
 // Content type from the first bytes of a body: "image/bmp", "image/png",

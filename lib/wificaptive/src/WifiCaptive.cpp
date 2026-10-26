@@ -132,6 +132,8 @@ bool WifiCaptive::startPortal() {
   setUpWebserver(*_server, localIP, callbacks);
 #endif
 
+  if (_setupRoutesCallback) _setupRoutesCallback(*_server);
+
     // begin serving
   _server->begin();
 

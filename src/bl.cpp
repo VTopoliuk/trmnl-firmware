@@ -57,6 +57,8 @@
 #include "messages.h"
 #include "displayed_image.h"
 #include <globals.h>
+#include <services/local_live.h>
+#include <services/local_live_settings.h>
 
 static float vBatt;
 static https_request_err_e downloadAndShow(); // download and show the image
@@ -701,6 +703,9 @@ void bl_init(void)
   Log_info("BL init success");
 
   WifiCaptivePortal.setHostname(getWifiClientHostname());
+#if defined(TRMNL_LOCAL_LIVE) && defined(BOARD_TRMNL_X)
+  WifiCaptivePortal.setSetupRoutesCallback(local_live_register_settings);
+#endif
 
 #ifdef BOARD_TRMNL_X
   bool bModemNeeded = false;
@@ -1111,6 +1116,9 @@ void bl_init(void)
   }
 
 #endif
+
+  // The custom mode is compiled out of stock builds; only USB power opts in.
+  if (local_live_run()) goToSleep();
 
   // clock synchronization
   if (systemClock().setTimeFromNTP())
