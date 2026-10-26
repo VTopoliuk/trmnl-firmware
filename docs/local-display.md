@@ -1,4 +1,4 @@
-# USB local image display (TRMNL X)
+# Local image display (TRMNL X)
 
 This fork is based on upstream `usetrmnl/trmnl-firmware` tag **v1.8.17**
 (`9acd348270a493ca5f1c627ac91a9469543267ae`). It adds an optional image client,
@@ -40,20 +40,30 @@ Configuration is not encrypted at rest; use physical control of the device and
 setup AP. HTTP exposes images and tokens to the network; HTTPS uses the existing
 certificate validation and needs a working NTP clock and a trusted certificate.
 
-When disabled or on battery, normal firmware flow runs. While enabled and USB
-powered, the client keeps Wi-Fi awake and owns the display; cloud display fetches
-and cloud OTA checks are bypassed during that loop. Unplugging returns to the
-normal sleep cycle after the current bounded request. This is intended for a
-powered display, not a battery refresh solution. To restore normal cloud mode,
-disable the setting in setup and restart, or install stock firmware. The local
-setting is separate from the upstream Wi-Fi/cloud settings; clearing Wi-Fi alone
-does not erase it.
+When disabled, normal firmware flow runs. When enabled, USB power keeps Wi-Fi
+awake for live updates. Battery operation performs one poll without a long wait per
+wake and sleeps for five minutes. The last frame ID and any pending drawing
+acknowledgement survive deep sleep in RTC memory. Unchanged frames do not redraw;
+a changed frame after sleep uses a full clear. Network failure retains the panel
+contents. Local sessions suppress cloud log submission before sleeping.
+
+A server may return `{ "changed": false, "displayMode": "normal" }` to resume
+the stock cloud playlist. Omission or `"local"` selects local images. The last
+selection is remembered for touchbar wake handling. Normal mode preserves stock
+cached-playlist navigation; local mode treats single taps as local refreshes.
+The reserved corner-reset action is preserved. A server-side mode change applies
+on the next wake; the middle button can wake the device sooner. The standalone
+setup checkbox still disables the client completely.
+
+Local polling runs before the stock Wi-Fi error path, so a failed local connection
+does not replace the retained image with a cloud/error screen. Settings and
+credentials remain separate from upstream Wi-Fi/cloud settings.
 
 ## HTTP protocol
 
 All requests are GET. An optional `Authorization: Bearer …` header is sent only
 to the configured origin (scheme, hostname and port), including after redirects.
-The firmware adds `wait=8&after=<last-displayed-id>` to the configured endpoint.
+The firmware adds `wait=8&after=<last-displayed-id>&power=usb` (battery uses `wait=0` and `power=battery`) to the configured endpoint.
 The server may long-poll for up to eight seconds. Requests have 12-second read
 timeouts; successful iterations pause three seconds. Failures retain the last
 image and back off from four seconds to at most 60 seconds while checking USB.
@@ -106,7 +116,7 @@ paths or query strings because upstream HTTP diagnostics can log URLs.
 
 ## Partial refresh and limitations
 
-The first image always uses a full clear. Later partial updates cover the range
+The first changed image in an awake session always uses a full clear. An unchanged frame after battery sleep is retained without drawing. Later partial updates cover the range
 of changed rows, and identical decoded images do not drive the panel again.
 A full clear is required after three partial images, after ten minutes on the
 next changed image, after a drawing failure, or when the server asks for one.

@@ -831,7 +831,10 @@ void bl_init(void)
   }
 
   if (gpio_wakeup) {
-    process_iqs323_data();
+    // Single taps refresh the local screen, rather than browsing cached cloud images.
+    bool local = local_live_local_mode();
+    bool corners = iqs323.channel_touchState(IQS323_CH0) && iqs323.channel_touchState(IQS323_CH2);
+    if (!local || corners) process_iqs323_data();
   }
 
   // For future
@@ -1013,6 +1016,8 @@ void bl_init(void)
 #endif // BOARD_TRMNL_X
 
   WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
+  // Own network failures before the stock path can replace the retained image.
+  if (local_live_run()) goToSleep();
 
   MSG current_msg = NONE;
 
@@ -1116,9 +1121,6 @@ void bl_init(void)
   }
 
 #endif
-
-  // The custom mode is compiled out of stock builds; only USB power opts in.
-  if (local_live_run()) goToSleep();
 
   // clock synchronization
   if (systemClock().setTimeFromNTP())
@@ -2261,7 +2263,9 @@ static void resetDeviceCredentials(void)
 void goToSleep(void)
 {
   Log.info("%s [%d]: go to sleep\r\n", __FILE__, __LINE__);
-  submitStoredLogs();
+  const uint32_t localSleep = local_live_sleep_seconds();
+  if (!localSleep) submitStoredLogs();
+  else { WiFi.disconnect(); WiFi.mode(WIFI_OFF); }
 
 // DEBUG - workaround to prevent crash in the WiFi stack of unknown origin
 #ifndef PARALLEL_EPD
@@ -2295,7 +2299,7 @@ void goToSleep(void)
 #endif
 
   filesystem_deinit();
-  uint32_t time_to_sleep = refreshInterval.seconds();
+  uint32_t time_to_sleep = localSleep ? localSleep : refreshInterval.seconds();
   iPrevWakeTime = millis() - startup_time; // save for statistics
   Log.info("%s [%d]: total awake time - %d ms\r\n", __FILE__, __LINE__, iPrevWakeTime); 
   Log.info("%s [%d]: time to sleep - %d\r\n", __FILE__, __LINE__, time_to_sleep);

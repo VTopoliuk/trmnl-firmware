@@ -1,6 +1,6 @@
 # TRMNL Firmware
 
-This fork adds an opt-in, USB-powered local image display for TRMNL X, based on
+This fork adds an opt-in local image display with live USB updates and five-minute battery polling for TRMNL X, based on
 upstream **v1.8.17**. Configure the server and optional token in the Wi-Fi setup
 portal; no application address, credentials, content, or layout is compiled in.
 See [local display setup, protocol, build and tests](docs/local-display.md).

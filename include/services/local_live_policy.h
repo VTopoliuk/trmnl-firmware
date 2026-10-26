@@ -6,6 +6,18 @@
 namespace local_live {
 constexpr uint8_t PARTIAL_DRIVE_PASSES = 8;
 constexpr uint8_t FULL_DRIVE_PASSES = 3;
+constexpr uint32_t BATTERY_REFRESH_SECONDS = 300;
+// One final poll without a long wait after unplugging, then sleep. Plugging in while
+// awake resets the allowance so a subsequent unplug gets a fresh final poll.
+struct PowerCycles {
+  bool batteryComplete = false;
+  bool begin(bool usb) {
+    if (usb) { batteryComplete = false; return true; }
+    if (batteryComplete) return false;
+    batteryComplete = true;
+    return true;
+  }
+};
 inline bool validPartialPasses(int passes) { return passes == 6 || passes == 8 || passes == 10; }
 // Conservative URL grammar: one origin, no embedded credentials or query in
 // the poll endpoint. Image/ack paths may contain a query, never another host.

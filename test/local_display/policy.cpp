@@ -6,6 +6,18 @@
 #include <iterator>
 
 int main(int argc, char **argv) {
+  local_live::PowerCycles power;
+  for (int n = 0; n < 20; ++n) assert(power.begin(true));
+  assert(power.begin(false)); // final battery poll after unplugging
+  assert(!power.begin(false)); // no busy loop while on battery
+  assert(!power.begin(false));
+  assert(power.begin(true)); // plugging in while awake resumes live mode
+  assert(power.begin(false));
+  assert(!power.begin(false));
+  local_live::PowerCycles batteryBoot;
+  assert(batteryBoot.begin(false)); // periodic wake fetches once
+  assert(!batteryBoot.begin(false));
+  assert(local_live::BATTERY_REFRESH_SECONDS == 300);
   local_live::RefreshPolicy policy;
   assert(policy.full(100)); // first frame must clear, regardless of RTC state
   policy.displayed(100, true);
